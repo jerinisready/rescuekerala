@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block title %} Register as a  Volunteer OR NGO | {% endblock %}
+
+
 {% block content %}
 
 {% load bootstrap3 %}
@@ -33,7 +37,9 @@
             View Registered<br/> Volunteers
             <span class="ml small"></span>
         </span>
+        {% if home_page_setting.DISPLAY %}
         <span class="badge badge-info"> Registered: {{ registered_volunteers_count }}  </span>
+        {% endif %}
 
     </a> 
     <a href="{%url 'ngoregisterview' %}" class="home-button card" role="button">
@@ -49,7 +55,9 @@
             View Registered<br/> NGO's/Company's
             <span class="ml small"></span>
         </span>
+        {% if home_page_setting.DISPLAY %}
         <span class="badge badge-info"> Registered: {{ registered_ngo_count }}  </span>
+        {% endif %}
     </a>
     <p class="home-info">
         Contact Control Room or Disaster Management Cell or District Administration for any support.<br>

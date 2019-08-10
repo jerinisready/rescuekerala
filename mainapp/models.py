@@ -5,6 +5,7 @@ import csv
 import codecs
 from hashlib import md5
 
+from django.conf import settings
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
@@ -725,6 +726,7 @@ class CsvBulkUpload(models.Model):
     def __str__(self):
         return self.name
 
+
 class Hospital(models.Model):
     name = models.CharField(max_length=200)
     officer = models.CharField(max_length=100)
@@ -740,3 +742,30 @@ class Hospital(models.Model):
     @classmethod
     def count(cls):
         return cls._default_manager.count()
+
+
+@receiver(post_save, sender=Request)
+@receiver(post_save, sender=RescueCamp)
+@receiver(post_save, sender=Announcements)
+@receiver(post_save, sender=Contributor)
+@receiver(post_save, sender=DistrictNeed)
+@receiver(post_save, sender=Volunteer)
+@receiver(post_save, sender=DistrictManager)
+@receiver(post_save, sender=Hospital)
+@receiver(post_save, sender=PrivateRescueCamp)
+@receiver(post_save, sender=CollectionCenter)
+def expire_home_page_count_cache(sender, created, **kwargs):
+    if created:
+        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', {})
+        if home_page_setting.get('INVALIDATION_LOGIC', '') == 'ON_CREATE':
+            cache.delete(home_page_setting.get('HOME_PAGE_CACHE_KEY', 'home_page_data_statics'))
+
+
+@receiver(post_save, sender=Volunteer)
+@receiver(post_save, sender=NGO)
+def expire_home_page_count_cache(sender, created, **kwargs):
+    if created:
+        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', {})
+        if home_page_setting.get('INVALIDATION_LOGIC', '') == 'ON_CREATE':
+            cache.delete(home_page_setting.get('VOLUNTEER_CACHE_KEY', 'ngo_data_statics'))
+

@@ -4,6 +4,11 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
 
+from django.core.cache import cache
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.conf import settings
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+
 from mainapp.redis_queue import sms_queue
 from mainapp.sms_handler import send_confirmation_sms
 from .models import Request, Volunteer, DistrictManager, Contributor, DistrictNeed, Person, RescueCamp, NGO, \
@@ -45,6 +50,8 @@ PER_PAGE = 100
 PAGE_LEFT = 5
 PAGE_RIGHT = 5
 PAGE_INTERMEDIATE = "50"
+
+home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', {})
 
 class CreateRequest(CreateView):
     model = Request
@@ -203,20 +210,28 @@ class HomePageView(TemplateView):
     template_name = "home.html"
 
     def get_context_data(self, **kwargs):
-        cxt = super(HomePageView, self).get_context_data(**kwargs)
-        cxt['request_for_rescue_count'] = Request.request_for_rescue()
-        cxt['request_for_resource_count'] = Request.request_for_resource()
-        cxt['relief_camps_count'] = RescueCamp.count()
-        cxt['announcement_count'] = Announcements.count()
-        cxt['to_contribute_count'] = Contributor.count()
-        cxt['district_needs_count'] = DistrictNeed.count()
-        cxt['volunteer_and_ngo_company_count'] = Volunteer.count() + NGO.count()
-        cxt['contact_info'] = DistrictManager.count()
-        cxt['registered_requests_count'] = "-"  # todo
 
-        cxt['hospital_count'] = Hospital.count()
-        cxt['private_relief_and_collection_centers_count'] = PrivateRescueCamp.count() + CollectionCenter.count()
-
+        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', None)
+        page_data_cache_key = home_page_setting.get('HOME_PAGE_CACHE_KEY', 'home_page_data_statics')
+        _data = {}
+        if home_page_setting.get('DISPLAY', False):
+            if page_data_cache_key in cache:
+                _data = cache.get(page_data_cache_key)
+            else:
+                _data['request_for_rescue_count'] = Request.request_for_rescue()
+                _data['request_for_resource_count'] = Request.request_for_resource()
+                _data['relief_camps_count'] = RescueCamp.count()
+                _data['announcement_count'] = Announcements.count()
+                _data['to_contribute_count'] = Contributor.count()
+                _data['district_needs_count'] = DistrictNeed.count()
+                _data['volunteer_and_ngo_company_count'] = Volunteer.count() + NGO.count()
+                _data['contact_info'] = DistrictManager.count()
+                _data['registered_requests_count'] = "-"  # todo
+                _data['hospital_count'] = Hospital.count()
+                _data['private_relief_and_collection_centers_count'] = PrivateRescueCamp.count() + CollectionCenter.count()
+                timeout = home_page_setting.get('TIMEOUT', 60 * 40)
+                cache.set(page_data_cache_key, _data, timeout=timeout)
+        cxt = super(HomePageView, self).get_context_data(**_data, home_page_setting=home_page_setting, **kwargs)
         return cxt
 
 
@@ -224,9 +239,17 @@ class NgoVolunteerView(TemplateView):
     template_name = "ngo_volunteer.html"
 
     def get_context_data(self, **kwargs):
-        cxt = super(NgoVolunteerView, self).get_context_data(**kwargs)
-        cxt['registered_volunteers_count'] = 0
-        cxt['registered_ngo_count'] = 0
+
+        page_data_cache_key = home_page_setting.get('VOLUNTEER_CACHE_KEY', 'ngo_data_statics')
+        _data = {}
+        if home_page_setting.get('DISPLAY', False):
+            if page_data_cache_key in cache:
+                _data = cache.get(page_data_cache_key)
+            else:
+                _data['registered_volunteers_count'] = Volunteer.count()
+                _data['registered_ngo_count'] = NGO.count()
+                cache.set(page_data_cache_key, _data, timeout=CACHE_TTL)
+        cxt = super(NgoVolunteerView, self).get_context_data(**_data, home_page_setting=home_page_setting, **kwargs)
         return cxt
 
 
