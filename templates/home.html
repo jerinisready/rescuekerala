@@ -1,36 +1,49 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block title %} Home | {% endblock %}
+
+
 {% block content %}
 
 {% load bootstrap3 %}
-
+<style>
+    .container .text{vertical-align: middle;}
+</style>
 <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page">Home</li>
-        </ol>
-    </nav>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">Home</li>
+    </ol>
+</nav>
 <div class="container text-center">
     <h1 class="main-logo">Kerala<span style="font-weight: normal;">rescue</span></h1>
     <p style="margin-bottom:20px;">
         <i>An initiative by Govt. of Kerala, Kerala State IT Mission and IEEE Kerala Section<br>
-        For effective collaboration and communications between authorities, volunteers and public </i><br/>
+            For effective collaboration and communications between authorities, volunteers and public </i><br/>
         <strong><span class="notranslate">ദുരിതാശ്വാസ പ്രവർത്തനങ്ങളും രക്ഷാ ദൗത്യങ്ങളും ഏകോപിപ്പിക്കാൻ</span></strong><br/>
-          <!-- <a class="btn btn-info btn-msg" href="{% static 'images/msg_cm.jpg' %}">Message from Hon. Chief Minister of Kerala</a> -->
-          <a class="btn btn-info btn-msg" href="https://donation.cmdrf.kerala.gov.in/">Donate to Chief Minister's Fund Online</a>
-  </p>
-  <a href="https://keralarescuemap.ushahidi.io/posts/create/17" class="home-button card" role="button">
-    {% bootstrap_icon "bell" %}
-    <span class="text">
+        <!-- <a class="btn btn-info btn-msg" href="{% static 'images/msg_cm.jpg' %}">Message from Hon. Chief Minister of Kerala</a> -->
+        <a class="btn btn-info btn-msg" target="_blank" href="https://donation.cmdrf.kerala.gov.in/">Donate to Chief Minister's Fund Online</a>
+    </p>
+    <a href="https://keralarescuemap.ushahidi.io/posts/create/17" class="home-button card" role="button">
+        {% bootstrap_icon "bell" %}
+        <span class="text">
         Request<br/>for rescue<br/>
         <span class="ml small notranslate">രക്ഷാപ്രവർത്തനം അഭ്യർത്ഥിക്കാൻ</span>
     </span>
-</a>  <a href="https://keralarescuemap.ushahidi.io/posts/create/18" class="home-button card" role="button">
-    {% bootstrap_icon "grain" %}
-    <span class="text">
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{ request_for_rescue_count}}  </span>
+        {% endif %}
+    </a>
+    <a href="https://keralarescuemap.ushahidi.io/posts/create/18" class="home-button card" role="button">
+        {% bootstrap_icon "grain" %}
+        <span class="text">
         Request<br/>for resources<br/>
         <span class="ml small notranslate">സഹായം അഭ്യർത്ഥിക്കാൻ</span>
     </span>
-</a>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{ request_for_resource_count}}  </span>
+        {% endif %}
+    </a>
     <!-- <a href="{%url 'report_find_person' %}" class="home-button card" role="button">
         {% bootstrap_icon "user" %}
         <span class="text">
@@ -44,20 +57,29 @@
           Relief Camps<br/>
           <span class="ml small notranslate">ദുരിതാശ്വാസ ക്യാമ്പുകൾ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{relief_camps_count}}  </span>
+        {% endif %}
     </a>
     <a href="{%url 'Announcements' %}" class="home-button card" role="button">
-            {% bootstrap_icon "bullhorn" %}
-            <span class="text">
+        {% bootstrap_icon "bullhorn" %}
+        <span class="text">
             Announcements<br/>
                 <span class="ml small notranslate">അറിയിപ്പുകൾ</span>
             </span>
-        </a>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{announcement_count}}  </span>
+        {% endif %}
+    </a>
     <a href="{%url 'contribute' %}" class="home-button card" role="button">
         {% bootstrap_icon "apple" %}
         <span class="text">
             Contribute<br/>
             <span class="ml small notranslate">സഹായങ്ങൾ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: -  </span>
+        {% endif %}
     </a>
     <a href="{%url 'distneedsview' %}" class="home-button card" role="button">
         {% bootstrap_icon "map-marker" %}
@@ -65,6 +87,9 @@
             DISTRICT NEEDS &amp; COLLECTION CENTERS<br/>
             <span class="ml small notranslate">ജില്ലകളിലെ ആവശ്യങ്ങൾ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{district_needs_count}}  </span>
+        {% endif %}
     </a>
     <a href="{%url 'ngovolunteerview' %}" class="home-button card" role="button">
         {% bootstrap_icon "user" %}
@@ -72,6 +97,9 @@
             Volunteer &amp; NGO/COMPANY <br/>
             <span class="ml small notranslate">വൊളന്‍റീയര &amp;<br/> എൻജിഒ്/കമ്പനി‍ </span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{volunteer_and_ngo_company_count}}  </span>
+        {% endif %}
     </a>
     <!-- <a href="{%url 'mapview' %}" class="home-button card" role="button">
         {% bootstrap_icon "globe" %}
@@ -79,6 +107,9 @@
             Maps<br/>
             <span class="ml small notranslate">സഹായം ആവശ്യമായ സ്ഥലങ്ങളും<br/>ദുരിതാശ്വാസ ക്യാമ്പുകളും</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+     <span class="badge badge-info"> Registered: 43  </span>
+        {% endif %}
     </a> -->
     <a href="{% url 'contactus' %}" class="home-button card" role="button">
         {% bootstrap_icon "phone" %}
@@ -86,13 +117,19 @@
             Contact <br>INFO<br/>
             <span class="ml small notranslate">ഞങ്ങളുമായി ബന്ധപ്പെടാൻ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{contact_info}}  </span>
+        {% endif %}
     </a>
     <a href="https://keralarescuemap.ushahidi.io/views/map" class="home-button card" role="button">
-      {% bootstrap_icon "list" %}
-      <span class="text">
+        {% bootstrap_icon "list" %}
+        <span class="text">
         Registered Requests<br/>
         <span class="ml small notranslate">ഇതു വരെ ആവശ്യപ്പെട്ടവ</span>
       </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{registered_requests_count}}  </span>
+        {% endif %}
     </a>
     <a href="{%url 'hospitals' %}" class="home-button card" role="button">
         {% bootstrap_icon "plus" %}
@@ -100,6 +137,9 @@
         Hospitals<br/>
             <span class="ml small notranslate">ആശുപത്രികൾ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{hospital_count}}  </span>
+        {% endif %}
     </a>
     <a href="{%url 'privatedetails' %}" class="home-button card" role="button">
         {% bootstrap_icon "briefcase" %}
@@ -107,16 +147,35 @@
                 Private Relief &<br> Collection Centers<br/>
             <span class="ml small notranslate">സ്വകാര്യ റിലീഫ് ആൻഡ് കളക്ഷൻ സെന്ററുകൾ</span>
         </span>
+        {% if home_page_setting.DISPLAY %}
+        <span class="badge badge-info"> Registered: {{private_relief_and_collection_centers_count}}  </span>
+        {% endif %}
     </a>
     <p class="home-info">
-            For emergency support, call the District control room at <b>1077</b> or the State control room at <b>1070</b>.<br>
+        For emergency support, call the District control room at <b>1077</b> or the State control room at <b>1070</b>.<br>
         Volunteers may contact District Project Managers for support related to volunteering and contributions<br>
         <br/>
         <span class="notranslate">സഹായത്തിനായി സന്നദ്ധ സേവകർ തയ്യാറാണ്. <br> സഹായം ആവശ്യമെങ്കിൽ വിളിക്കുക: ജില്ലാ കൺട്രോൾ റൂം: <b>1077</b> , സംസ്ഥാന കൺട്രോൾ റൂം: <b>1070</b> </span>
     </p>
-     <br>
-  <p class="slack">
-       Our Collaboration Platform (Slack) <a href="https://bit.ly/Keralarescuechat">Join</a>
-  </p>
+    <br>
+    <p class="slack">
+        Our Collaboration Platform (Slack) <a target="_blank" href="https://bit.ly/Keralarescuechat">Join</a>
+    </p>
 </div>
+{% endblock %}
+{% block javascript %}
+<script>
+    $(document).ready(function(){
+        $('.container').each(function(){
+            var highestBox = 0;
+            $('a.home-button .text', this).each(function(){
+                if($(this).height() > highestBox) {
+                    highestBox = $(this).height();
+                }
+            });
+            $('a.home-button .text',this).height(highestBox);
+        });
+    });
+
+</script>
 {% endblock %}

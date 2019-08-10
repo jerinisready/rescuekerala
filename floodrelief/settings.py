@@ -225,7 +225,7 @@ bucket_name = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 S3_URL = "https://{}.s3.ap-south-1.amazonaws.com".format(bucket_name,)
 
 
-if os.environ.get('USE_S3','').lower() == "true" :
+if os.environ.get('USE_S3','').lower() == "true":
     AWS_STORAGE_BUCKET_NAME=bucket_name
     AWS_ACCESS_KEY_ID=os.environ.get("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY=os.environ.get("AWS_SECRET_ACCESS_KEY")
@@ -254,4 +254,13 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
+}
+
+HOME_PAGE_ANALYTICS = {
+    'DISPLAY': True,
+    'INVALIDATION_LOGIC': 'TIMEOUT',        # options : ["TIMEOUT", "ON_CREATE"]
+                                            #  ON_CREATE is accurate but expensive for drastic write COUNT.
+    'TIMEOUT': 60 * 40,                     # DEFAULTS TO 40 MINUTE.
+    'HOME_PAGE_CACHE_KEY': 'home_page_data_statics',
+    'VOLUNTEER_CACHE_KEY': 'ngo_data_statics',
 }

@@ -5,9 +5,11 @@ import csv
 import codecs
 from hashlib import md5
 
+from django.conf import settings
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
@@ -15,7 +17,7 @@ from django.core.cache.utils import make_template_fragment_key
 from django.core.cache import cache
 from django.dispatch import receiver
 from django.utils import timezone
-
+from django.utils.functional import cached_property
 
 districts = (
     ('alp','Alappuzha - ആലപ്പുഴ'),
@@ -189,6 +191,15 @@ class Request(models.Model):
     def is_old(self):
         return self.dateadded < (timezone.now() - timezone.timedelta(days=2))
 
+    @classmethod
+    def request_for_rescue(cls):
+        return cls._default_manager.filter(needrescue=True).count()
+
+    @classmethod
+    def request_for_resource(cls):
+        flt = Q(needwater=True) | Q(needfood=True) | Q(needcloth=True) | Q(needcloth=True) | Q(needmed=True) | Q(needtoilet=True) | Q(needkit_util=True)
+        return cls._default_manager.filter(flt).distinct('id').count()
+
 
 class Volunteer(models.Model):
     district = models.CharField(
@@ -220,6 +231,10 @@ class Volunteer(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
 
 class NGO(models.Model):
     district = models.CharField(
@@ -250,6 +265,10 @@ class NGO(models.Model):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
 
 
 class Contributor(models.Model):
@@ -283,6 +302,10 @@ class Contributor(models.Model):
     def __str__(self):
         return self.name + ' ' + self.get_district_display()
 
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
 
 class DistrictManager(models.Model):
     district = models.CharField(
@@ -301,6 +324,10 @@ class DistrictManager(models.Model):
     def __str__(self):
         return self.name + ' ' + self.get_district_display()
 
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
 
 class DistrictNeed(models.Model):
     district = models.CharField(
@@ -308,7 +335,7 @@ class DistrictNeed(models.Model):
         choices = districts,
     )
     needs = models.TextField(verbose_name="Items required")
-    cnandpts = models.TextField(verbose_name="Contacts and collection points") #contacts and collection points
+    cnandpts = models.TextField(verbose_name="Contacts and collection points")       #contacts and collection points
 
     class Meta:
         verbose_name = 'District: Need'
@@ -316,6 +343,10 @@ class DistrictNeed(models.Model):
 
     def __str__(self):
         return self.get_district_display()
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
 
 
 class DistrictCollection(models.Model):
@@ -394,9 +425,12 @@ class RescueCamp(models.Model):
                 'wnd':'Wayanad - വയനാട്',
                 }.get(self.district, 'Unknown')
 
-
     def __str__(self):
         return self.name
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.filter(status="active").count()
 
 
 @receiver(post_save, sender=RescueCamp)
@@ -445,9 +479,13 @@ class PrivateRescueCamp(models.Model):
         verbose_name = 'Private Relief: Camp'
         verbose_name_plural = "Private Relief: Camps"
 
-
     def __str__(self):
         return self.name
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.filter(status="active").count()
+
 
 
 class Person(models.Model):
@@ -533,6 +571,10 @@ class Person(models.Model):
         if(Person.objects.filter(unique_identifier = self.unique_identifier).count() == 0 ):
             super(Person, self).save(*args, **kwargs)
 
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
 
 
 def upload_to(instance, filename):
@@ -560,6 +602,11 @@ class Announcements(models.Model):
 
     def __str__(self):
         return self.description[:100]
+
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
 
 
 class DataCollection(models.Model):
@@ -641,6 +688,10 @@ class CollectionCenter(models.Model):
     def get_absolute_url(self):
         return reverse('collection_centers_list')
 
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
 
 class CsvBulkUpload(models.Model):
     name = models.CharField(max_length=20)
@@ -675,6 +726,7 @@ class CsvBulkUpload(models.Model):
     def __str__(self):
         return self.name
 
+
 class Hospital(models.Model):
     district = models.CharField(
         max_length = 15,
@@ -693,3 +745,34 @@ class Hospital(models.Model):
 
     def __str__(self):
         return self.name + ' - ' + self.designation
+
+    @classmethod
+    def count(cls):
+        return cls._default_manager.count()
+
+
+@receiver(post_save, sender=Request)
+@receiver(post_save, sender=RescueCamp)
+@receiver(post_save, sender=Announcements)
+@receiver(post_save, sender=Contributor)
+@receiver(post_save, sender=DistrictNeed)
+@receiver(post_save, sender=Volunteer)
+@receiver(post_save, sender=DistrictManager)
+@receiver(post_save, sender=Hospital)
+@receiver(post_save, sender=PrivateRescueCamp)
+@receiver(post_save, sender=CollectionCenter)
+def expire_home_page_count_cache(sender, created, **kwargs):
+    if created:
+        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', {})
+        if home_page_setting.get('INVALIDATION_LOGIC', '') == 'ON_CREATE':
+            cache.delete(home_page_setting.get('HOME_PAGE_CACHE_KEY', 'home_page_data_statics'))
+
+
+@receiver(post_save, sender=Volunteer)
+@receiver(post_save, sender=NGO)
+def expire_home_page_count_cache(sender, created, **kwargs):
+    if created:
+        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', {})
+        if home_page_setting.get('INVALIDATION_LOGIC', '') == 'ON_CREATE':
+            cache.delete(home_page_setting.get('VOLUNTEER_CACHE_KEY', 'ngo_data_statics'))
+
