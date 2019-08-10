@@ -33,6 +33,8 @@
             View Registered<br/> Volunteers
             <span class="ml small"></span>
         </span>
+        <span class="badge badge-info"> Registered: {{ registered_volunteers_count }}  </span>
+
     </a> 
     <a href="{%url 'ngoregisterview' %}" class="home-button card" role="button">
         {% bootstrap_icon "list-alt" %}
@@ -47,6 +49,7 @@
             View Registered<br/> NGO's/Company's
             <span class="ml small"></span>
         </span>
+        <span class="badge badge-info"> Registered: {{ registered_ngo_count }}  </span>
     </a>
     <p class="home-info">
         Contact Control Room or Disaster Management Cell or District Administration for any support.<br>

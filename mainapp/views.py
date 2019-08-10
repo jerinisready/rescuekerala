@@ -202,9 +202,32 @@ class RegisterContributor(CreateView):
 class HomePageView(TemplateView):
     template_name = "home.html"
 
+    def get_context_data(self, **kwargs):
+        cxt = super(HomePageView, self).get_context_data(**kwargs)
+        cxt['request_for_rescue_count'] = Request.request_for_rescue()
+        cxt['request_for_resource_count'] = Request.request_for_resource()
+        cxt['relief_camps_count'] = RescueCamp.count()
+        cxt['announcement_count'] = Announcements.count()
+        cxt['to_contribute_count'] = Contributor.count()
+        cxt['district_needs_count'] = DistrictNeed.count()
+        cxt['volunteer_and_ngo_company_count'] = Volunteer.count() + NGO.count()
+        cxt['contact_info'] = DistrictManager.count()
+        cxt['registered_requests_count'] = "-"  # todo
+
+        cxt['hospital_count'] = Hospital.count()
+        cxt['private_relief_and_collection_centers_count'] = PrivateRescueCamp.count() + CollectionCenter.count()
+
+        return cxt
+
 
 class NgoVolunteerView(TemplateView):
     template_name = "ngo_volunteer.html"
+
+    def get_context_data(self, **kwargs):
+        cxt = super(NgoVolunteerView, self).get_context_data(**kwargs)
+        cxt['registered_volunteers_count'] = 0
+        cxt['registered_ngo_count'] = 0
+        return cxt
 
 
 class MapView(TemplateView):
@@ -259,7 +282,8 @@ class RescueCampFilter(django_filters.FilterSet):
 
 
 def relief_camps(request):
-    return render(request,"mainapp/relief_camps.html")
+    context = {'count': RescueCamp.count(), }
+    return render(request,"mainapp/relief_camps.html", context=context)
 
 
 def missing_persons(request):
@@ -272,7 +296,7 @@ def relief_camps_list(request):
     paginator = Paginator(relief_camps,50)
     page = request.GET.get('page')
     data = paginator.get_page(page)
-    return render(request, 'mainapp/relief_camps_list.html', {'filter': filter, 'data': data})
+    return render(request, 'mainapp/relief_camps_list.html', {'filter': filter, 'data': data, 'count': paginator.count})
 
 class RequestFilter(django_filters.FilterSet):
     class Meta:
@@ -831,13 +855,14 @@ class VolunteerConsent(UpdateView):
 class ConsentSuccess(TemplateView):
     template_name = "mainapp/volunteer_consent_success.html"
 
+
 def camp_requirements_list(request):
     filter = CampRequirementsFilter(request.GET, queryset=RescueCamp.objects.all())
     camp_data = filter.qs.order_by('name')
     paginator = Paginator(camp_data, 50)
     page = request.GET.get('page')
     data = paginator.get_page(page)
-    return render(request, "mainapp/camp_requirements_list.html", {'filter': filter , 'data' : data})
+    return render(request, "mainapp/camp_requirements_list.html", {'filter': filter , 'data': data})
 
 
 class RequestUpdateView(CreateView):
