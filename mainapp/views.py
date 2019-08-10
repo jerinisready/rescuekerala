@@ -214,7 +214,6 @@ class HomePageView(TemplateView):
 
     def get_context_data(self, **kwargs):
 
-        home_page_setting = getattr(settings, 'HOME_PAGE_ANALYTICS', None)
         page_data_cache_key = home_page_setting.get('HOME_PAGE_CACHE_KEY', 'home_page_data_statics')
         _data = {}
         if home_page_setting.get('DISPLAY', False):
